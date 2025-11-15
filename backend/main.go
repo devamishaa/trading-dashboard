@@ -7,6 +7,7 @@ import (
     "math"
     "math/rand"
     "net/http"
+    "os"
     "strings"
     "sync"
     "sync/atomic"
@@ -109,7 +110,11 @@ func main() {
         protected.POST("/orders", createOrderHandler)
     }
 
-    addr := ":8080"
+    port := os.Getenv("PORT")
+    if port == "" {
+        port = "8080"
+    }
+    addr := ":" + port
     log.Printf("trading backend running on %s", addr)
     if err := router.Run(addr); err != nil {
         log.Fatalf("server exited: %v", err)
