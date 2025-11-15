@@ -1,0 +1,68 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+:root {
+  font-family: 'Poppins', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color: #f6f8ff;
+  background-color: #02040a;
+  --bg: radial-gradient(circle at 15% 20%, rgba(86, 0, 255, 0.35), transparent 45%),
+    radial-gradient(circle at 80% 0%, rgba(0, 170, 255, 0.35), transparent 40%),
+    linear-gradient(135deg, #01020a, #050b1d 35%, #030823 65%, #060312);
+  --bg-grid: linear-gradient(
+      120deg,
+      rgba(255, 255, 255, 0.04) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      210deg,
+      rgba(255, 255, 255, 0.035) 1px,
+      transparent 1px
+    );
+  --panel-bg: linear-gradient(160deg, rgba(16, 22, 46, 0.95), rgba(5, 9, 20, 0.92));
+  --panel-border: rgba(255, 255, 255, 0.08);
+  --text-primary: #f6f8ff;
+  --text-muted: rgba(246, 248, 255, 0.6);
+  --accent: #7dc0ff;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text-primary);
+  position: relative;
+  overflow-x: hidden;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-image: var(--bg-grid);
+  background-size: 180px 180px, 220px 220px;
+  opacity: 0.35;
+  mix-blend-mode: soft-light;
+  transform: translate3d(0, 0, 0);
+}
+
+#root {
+  height: 100%;
+}
+
+button,
+input,
+select {
+  font-family: inherit;
+}
