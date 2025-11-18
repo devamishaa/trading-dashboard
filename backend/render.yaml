@@ -7,6 +7,9 @@ services:
     envVars:
       - key: PORT
         value: 10000
-      - key: JWT_SECRET
-        generateValue: true
+      # IMPORTANT: Add JWT_SECRET manually in Render dashboard
+      # Go to: Dashboard → Your Service → Environment → Add Environment Variable
+      # Key: JWT_SECRET
+      # Value: Generate using: openssl rand -hex 32
+      # Or use any secure random string (minimum 32 characters)
 
