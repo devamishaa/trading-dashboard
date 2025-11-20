@@ -14,7 +14,7 @@ import {
 import './App.css'
 
 const DEFAULT_API_BASE =
-  cleanBase(import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080')
+  cleanBase(import.meta.env.VITE_API_BASE_URL || 'https://trading-dashboard-3-i7gv.onrender.com')
 
 const SUPPORTED_SYMBOLS = ['AAPL', 'TSLA', 'AMZN', 'INFY', 'TCS']
 const WS_RETRY_MS = 2500
@@ -60,21 +60,21 @@ function App() {
   const [formMessage, setFormMessage] = useState(null)
   const [loadingOrders, setLoadingOrders] = useState(false)
   const [loadingPrices, setLoadingPrices] = useState(false)
-  const [token, setToken] = useState(() => localStorage.getItem('auth_token'))
-  const [user, setUser] = useState(() => localStorage.getItem('auth_user'))
-  const [showLogin, setShowLogin] = useState(!token)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [user, setUser] = useState(null)
+  const [showLogin, setShowLogin] = useState(true)
 
   const wsRef = useRef(null)
   const reconnectTimer = useRef(null)
 
   useEffect(() => {
     fetchLatestPrices()
-    if (token) {
+    if (isAuthenticated) {
       fetchOrders()
       const orderInterval = setInterval(fetchOrders, 5000)
       return () => clearInterval(orderInterval)
     }
-  }, [token])
+  }, [isAuthenticated])
 
   useEffect(() => {
     connectWebSocket()
@@ -174,13 +174,11 @@ function App() {
   }
 
   const fetchOrders = async () => {
-    if (!token) return
+    if (!isAuthenticated) return
     setLoadingOrders(true)
     try {
       const response = await fetch(buildHttpUrl('/orders'), {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        credentials: 'include',
       })
       if (!response.ok) {
         if (response.status === 401) {
@@ -230,6 +228,7 @@ function App() {
     try {
       const response = await fetch(buildHttpUrl('/login'), {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
       })
@@ -240,10 +239,8 @@ function App() {
       }
 
       const data = await response.json()
-      setToken(data.token)
       setUser(data.user)
-      localStorage.setItem('auth_token', data.token)
-      localStorage.setItem('auth_user', data.user)
+      setIsAuthenticated(true)
       setShowLogin(false)
       await fetchOrders()
     } catch (err) {
@@ -251,13 +248,20 @@ function App() {
     }
   }
 
-  const handleLogout = () => {
-    setToken(null)
-    setUser(null)
-    setOrders([])
-    localStorage.removeItem('auth_token')
-    localStorage.removeItem('auth_user')
-    setShowLogin(true)
+  const handleLogout = async () => {
+    try {
+      await fetch(buildHttpUrl('/logout'), {
+        method: 'POST',
+        credentials: 'include',
+      })
+    } catch (err) {
+      console.error('Logout error:', err)
+    } finally {
+      setIsAuthenticated(false)
+      setUser(null)
+      setOrders([])
+      setShowLogin(true)
+    }
   }
 
   const handleSubmit = async (event) => {
@@ -282,9 +286,9 @@ function App() {
     try {
       const response = await fetch(buildHttpUrl('/orders'), {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(payload),
       })

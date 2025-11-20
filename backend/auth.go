@@ -4,7 +4,6 @@ import (
 	"errors"
 	"net/http"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -83,29 +82,33 @@ func loginHandler(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, LoginResponse{
-		Token: tokenString,
-		User:  req.Username,
+	// Set token in HTTP-only cookie
+	c.SetCookie(
+		"auth_token",                // name
+		tokenString,                 // value
+		int(24*time.Hour.Seconds()), // maxAge in seconds
+		"/",                         // path
+		"",                          // domain (empty = current domain)
+		true,                        // secure (HTTPS only in production)
+		true,                        // httpOnly
+	)
+
+	// Return only user info, not the token
+	c.JSON(http.StatusOK, gin.H{
+		"user": req.Username,
 	})
 }
 
 func authMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		authHeader := c.GetHeader("Authorization")
-		if authHeader == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{"message": "authorization header required"})
+		// Try to get token from cookie
+		tokenString, err := c.Cookie("auth_token")
+		if err != nil || tokenString == "" {
+			c.JSON(http.StatusUnauthorized, gin.H{"message": "authentication required"})
 			c.Abort()
 			return
 		}
 
-		parts := strings.Split(authHeader, " ")
-		if len(parts) != 2 || parts[0] != "Bearer" {
-			c.JSON(http.StatusUnauthorized, gin.H{"message": "invalid authorization header format"})
-			c.Abort()
-			return
-		}
-
-		tokenString := parts[1]
 		claims := &Claims{}
 
 		token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
@@ -126,3 +129,19 @@ func authMiddleware() gin.HandlerFunc {
 	}
 }
 
+func logoutHandler(c *gin.Context) {
+	// Clear the auth_token cookie
+	c.SetCookie(
+		"auth_token", // name
+		"",           // value
+		-1,           // maxAge (negative to delete)
+		"/",          // path
+		"",           // domain
+		true,         // secure
+		true,         // httpOnly
+	)
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "logged out successfully",
+	})
+}
