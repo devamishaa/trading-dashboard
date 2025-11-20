@@ -1,10 +1,9 @@
 services:
   - type: web
     name: trading-dashboard-backend
-    env: go
-    rootDir: backend
-    buildCommand: go build -o trading-backend .
-    startCommand: ./trading-backend
+    env: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
     envVars:
       - key: PORT
         value: 10000
