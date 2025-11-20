@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: trading-dashboard-backend
+    env: go
+    rootDir: backend
+    buildCommand: go build -o trading-backend .
+    startCommand: ./trading-backend
+    envVars:
+      - key: PORT
+        value: 10000
+      # IMPORTANT: Add JWT_SECRET manually in Render dashboard
+      # Go to: Dashboard → Your Service → Environment → Add Environment Variable
+      # Key: JWT_SECRET
+      # Value: Generate using: openssl rand -hex 32
+      # Or use any secure random string (minimum 32 characters)
+
+
