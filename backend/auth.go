@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"os"
 	"time"
@@ -82,16 +83,10 @@ func loginHandler(c *gin.Context) {
 		return
 	}
 
-	// Set token in HTTP-only cookie
-	c.SetCookie(
-		"auth_token",                // name
-		tokenString,                 // value
-		int(24*time.Hour.Seconds()), // maxAge in seconds
-		"/",                         // path
-		"",                          // domain (empty = current domain)
-		true,                        // secure (HTTPS only in production)
-		true,                        // httpOnly
-	)
+	// Set token in HTTP-only cookie with SameSite=None for cross-origin
+	maxAge := int(24 * time.Hour.Seconds())
+	cookie := fmt.Sprintf("auth_token=%s; Path=/; Max-Age=%d; HttpOnly; Secure; SameSite=None", tokenString, maxAge)
+	c.Header("Set-Cookie", cookie)
 
 	// Return only user info, not the token
 	c.JSON(http.StatusOK, gin.H{
@@ -130,16 +125,9 @@ func authMiddleware() gin.HandlerFunc {
 }
 
 func logoutHandler(c *gin.Context) {
-	// Clear the auth_token cookie
-	c.SetCookie(
-		"auth_token", // name
-		"",           // value
-		-1,           // maxAge (negative to delete)
-		"/",          // path
-		"",           // domain
-		true,         // secure
-		true,         // httpOnly
-	)
+	// Clear the auth_token cookie with SameSite=None
+	cookie := "auth_token=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=None"
+	c.Header("Set-Cookie", cookie)
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "logged out successfully",
